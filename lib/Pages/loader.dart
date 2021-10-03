@@ -5,12 +5,12 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 
-class loader extends StatefulWidget {
+class Loader extends StatefulWidget {
   @override
-  _loaderState createState() => _loaderState();
+  _LoaderState createState() => _LoaderState();
 }
 
-class _loaderState extends State<loader> {
+class _LoaderState extends State<Loader> {
 
   @override
   void initState() {

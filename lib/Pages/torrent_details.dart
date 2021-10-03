@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 
 
-class torrent_details extends StatefulWidget {
+class Torrent_Details extends StatefulWidget {
   @override
-  _torrent_detailsState createState() => _torrent_detailsState();
+  _Torrent_DetailsState createState() => _Torrent_DetailsState();
 }
 
-class _torrent_detailsState extends State<torrent_details> {
+class _Torrent_DetailsState extends State<Torrent_Details> {
 
   @override
   void initState() {

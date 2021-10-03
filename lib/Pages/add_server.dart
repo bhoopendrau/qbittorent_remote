@@ -8,13 +8,13 @@ import 'package:http/http.dart' as http;
 import 'home.dart';
 
 
-class add_server extends StatefulWidget {
+class Add_Server extends StatefulWidget {
 
   @override
-  _add_serverState createState() => _add_serverState();
+  _Add_ServerState createState() => _Add_ServerState();
 }
 
-class _add_serverState extends State<add_server> {
+class _Add_ServerState extends State<Add_Server> {
 
   final GlobalKey<FormState> _form_key = GlobalKey();
 
@@ -49,9 +49,8 @@ class _add_serverState extends State<add_server> {
             if (value == true) {
               await pref.putString('serverList',Server.encode(servers));
               Navigator.push(
-                  context,
-                  new MaterialPageRoute(
-                      builder: (__) => new home(api_session:api_session)));
+                  context, new MaterialPageRoute(
+                      builder: (__) => new Home(api_session:api_session)));
             } else {
               print("login failed");
             }
