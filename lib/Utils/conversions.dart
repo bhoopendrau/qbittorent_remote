@@ -1,29 +1,54 @@
 import 'dart:math';
+import 'package:intl/intl.dart';
 
 class Conversions
 {
 
-  static String formatBytes(int bytes, int decimals) {
-    if (bytes <= 0) return "0 B";
-    const suffixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-    var i = (log(bytes) / log(1024)).floor();
-    return ((bytes / pow(1024, i)).toStringAsFixed(decimals)) +
-        ' ' +
-        suffixes[i];
+  static String formatBytes(int? bytes, int decimals) {
+    if (bytes != null) {
+      if (bytes <= 0) return "0 B";
+      const suffixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+      var i = (log(bytes) / log(1024)).floor();
+      return ((bytes / pow(1024, i)).toStringAsFixed(decimals)) +
+          ' ' +
+          suffixes[i];
+    } else {
+      return 'Error';
+    }
   }
-  // static String calculateSize(double value)
-  // {
-  //   String result = "0 B";
-  //   int bytes = value;
-  //   int unit = 1024;
-  //   if (bytes < unit) {
-  //     return bytes + " B";
-  //   }
-  //   int exp = (Math.log(bytes) ~/ Math.log(unit));
-  //   String pre = ("KMGTPE".codeUnitAt(exp - 1) + "i");
-  //   return String_.format("%.1f %sB", bytes ~/ Math.pow(unit, exp), pre).replace(",", ".");
-  // }
-  //
+
+  static String intToSpeed(int? bytes) {
+    if (bytes != null) {
+      if (bytes <= 0) return "0 Bps";
+      const suffixes = ["Bps", "KBps", "MBps", "GBps", "TBps", "PBps", "EBps", "ZBps", "YBps"];
+      var i = (log(bytes) / log(1024)).floor();
+      return ((bytes / pow(1024, i)).toStringAsFixed(0)) +
+          ' ' +
+          suffixes[i];
+    } else {
+      return 'Error';
+    }
+  }
+
+  static String timeStampToDate(int? timeStamp) {
+    if (timeStamp!=null){
+      var dateToTimeStamp = DateTime.fromMillisecondsSinceEpoch(timeStamp * 1000);
+      return DateFormat('dd/MM/yyyy hh:mm a').format(dateToTimeStamp);
+    } else {
+      return "Error Loading Time";
+    }
+  }
+
+  static String progressToPercentage(double? progress){
+    if (progress==null){
+      return "Error";
+    } else if (progress == 1) {
+      return "100%";
+    } else {
+      return (progress*100).toStringAsFixed(1)+"%";
+    }
+  }
+
   // static double humanSizeToBytes(String value)
   // {
   //   String scalar;
@@ -43,14 +68,17 @@ class Conversions
   //   }
   //   return returnValue;
   // }
-  //
+
   // static String unixTimestampToDate(String unixDate)
   // {
-  //   int dv = (Long.valueOf(unixDate) * 1000);
+  //   int dv = (int.parse(unixDate) * 1000);
   //   Date df = new Date(dv);
+  //   var format = DateFormat()
   //   return new SimpleDateFormat("yyyy-MM-dd hh:mm a").format(df);
   // }
-  //
+
+
+
   // static String unixTimestampToDate(int unixDate)
   // {
   //   Date df = new Date(unixDate);
