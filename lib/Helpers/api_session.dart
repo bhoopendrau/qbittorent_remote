@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:qbittorent_remote/Models/extraInfo.dart';
 import 'package:qbittorent_remote/Models/info_list.dart';
 import 'package:qbittorent_remote/Models/torrent_info.dart';
 
@@ -33,24 +34,49 @@ class Session {
 
   }
 
-  Future<InfoList> getTorrentInfo() async {
-    InfoList? torrentInfo = null;
+  Future<InfoList> getTorrentList() async {
+    InfoList? torrentList = null;
     print(headers);
     try {
       var url = Uri.parse(_baseurl!+'/api/v2/torrents/info');
       var response = await client.get(url, headers: headers);
       var jsonString = response.body;
       var jsonMap = json.decode(jsonString);
-      //Iterable l = json.decode(response.body);
-      //torrentInfo = List<TorrentInfo>.from(l.map((model)=> TorrentInfo.fromJson(model)));
-      torrentInfo  = InfoList.fromJson(jsonMap);
+      torrentList  = InfoList.fromJson(jsonMap);
+      print('Response status for get info List: ${response.statusCode}');
+      print('Response body for get info List: ${response.body}');
+    }catch(e) {
+      print(e);
+      throw Exception(e);
+    }
+    return torrentList;
+  }
+
+
+  Future<ExtraInfo> getTorrentInfo(String? hash) async {
+    ExtraInfo? extraInfo = null;
+    print(headers);
+    if (hash==null){
+     hash ="";
+    }
+    final request = {
+      "hash": hash
+    };
+
+    try {
+      var url = Uri.parse(_baseurl!+'/api/v2/torrents/properties');
+      print(hash);
+      var response = await client.post(url, body:request, headers: headers);
+      var jsonString = response.body;
+      var jsonMap = json.decode(jsonString);
+      extraInfo  = ExtraInfo.fromJson(jsonMap);
       print('Response status for get info: ${response.statusCode}');
       print('Response body for get info: ${response.body}');
     }catch(e) {
       print(e);
       throw Exception(e);
     }
-    return torrentInfo;
+    return extraInfo;
   }
 
   Future post(String endpoint, Map data) async {

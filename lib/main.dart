@@ -8,7 +8,7 @@ void main() => runApp(MaterialApp(
     initialRoute: '/',
     routes: {
       '/': (context) => Loader(),
-      '/location': (context) => Torrent_Details(),
+      //'/location': (context) => Torrent_Details(),
       '/addserver': (context) => Add_Server()
     }
 ));
