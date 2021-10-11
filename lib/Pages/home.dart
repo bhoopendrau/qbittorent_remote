@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:qbittorent_remote/Helpers/api_session.dart';
@@ -20,10 +23,29 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
 
-  late Future<InfoList> _torrentInfoList;
+  final StreamController<InfoList> _streamController = StreamController();
+  late final Timer _timer;
+
+  @override
+  void dispose() {
+    _streamController.close();
+    _timer.cancel();
+    super.dispose();
+  }
+
+  Future getInfoList() async {
+
+    var api = widget.api_session;
+    var url = Uri.parse(api.infoListUrl);
+    var response = await api.client.get(url, headers: api.headers);
+    _streamController.add(InfoList.fromJson(json.decode(response.body)));
+  }
+
   @override
   void initState() {
-    _torrentInfoList = widget.api_session.getTorrentList();
+    _timer = Timer.periodic(Duration(seconds: 3), (timer) {
+      getInfoList();
+    });
     super.initState();
 
   }
@@ -35,11 +57,10 @@ class _HomeState extends State<Home> {
         title: Text('Home')
       ),
       body: Container(
-        child: FutureBuilder<InfoList>(
-          future: _torrentInfoList,
+        child: StreamBuilder<InfoList>(
+          stream: _streamController.stream,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              print(snapshot.data.toString());
               return ListView.builder(
                 itemCount: snapshot.data!.infos.length,
                   itemBuilder: (context, index) {
@@ -77,96 +98,10 @@ class _HomeState extends State<Home> {
                 style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all(CustomColors.PrimaryAssentColor),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                child: Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(0, 1, 0, 1),
-                        child: SizedBox(
-                          height: 70,
-                            width: 70,
-                            child: _progressBar(info.progress)
-                        )
-                      ),
-                      Flexible(
-                        child: Padding(
-                          padding: const EdgeInsets.all(4.0),
-                          child: Text('${info.name}',
-                            maxLines: 2,
-                            style: TextStyle(
-                              overflow: TextOverflow.ellipsis,
-                              color: Colors.black
-                            ),
-                          ),
-                        ),
-                      ),
-                    ]),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              '${Conversions.formatBytes(info.downloaded, 2)}'
-                                  +' of ('+'${Conversions.formatBytes(info.size, 2)}'+')',
-                              style: TextStyle(
-                                  overflow: TextOverflow.ellipsis,
-                                  color: Colors.black
-                              ),
-                            ),
-                            flex: 5,
-                          ),
-                          Expanded(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Icon(
-                                  Icons.upload_rounded,
-                                  size: 20,
-                                  color: Colors.orange,
-                                ),
-                                Text(
-                                  "${Conversions.intToSpeed(info.upspeed)}",
-                                  textAlign: TextAlign.end,
-                                  style: TextStyle(
-                                      overflow: TextOverflow.ellipsis,
-                                      color: Colors.black
-                                  ),
-                                ),
-                              ]
-                            ),
-                            flex: 3,
-                          ),
-                          Expanded(
-                            flex: 3,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Icon(
-                                  Icons.download_rounded,
-                                  size: 20,
-                                  color: CustomColors.CustomGreen,
-                                ),
-                                Text(
-                                  "${Conversions.intToSpeed(info.dlspeed)}",
-                                  textAlign: TextAlign.end,
-                                  style: TextStyle(
-                                      overflow: TextOverflow.ellipsis,
-                                      color: Colors.black
-                                  ),
-                                ),
-                              ]
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
+                    _progressBar(info.progress),
+                    mainContent(info)
                   ],
                 ),
               ),
@@ -180,29 +115,134 @@ class _HomeState extends State<Home> {
   }
 
   Widget _progressBar (double? progress) {
-    return InkWell(
-      onTap: (){},
+    return SizedBox(
+      height: 70,
+      width: 70,
       child: Stack(
         fit: StackFit.expand,
         children: [
           Center(
-            child: SizedBox(
-              height: 50,
-              width: 50,
-              child: CircularProgressIndicator(
-                value: progress,
-                valueColor: AlwaysStoppedAnimation(Colors.green),
-                backgroundColor: Colors.grey,
-                strokeWidth: 6,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(0, 8, 8, 4),
+              child: SizedBox(
+                height: 60,
+                width: 60,
+                child: CircularProgressIndicator(
+                  value: progress,
+                  valueColor: AlwaysStoppedAnimation(Colors.green),
+                  backgroundColor: Colors.grey,
+                  strokeWidth: 6,
+                ),
               ),
             ),
           ),
-          Center(
-            child: Icon(
-              Icons.pause_circle_outline,
-              size: 30,
-              color: Colors.green
+          Padding(
+            padding: const EdgeInsets.fromLTRB(0, 8, 8, 4),
+            child: Center(
+              child: Icon(
+                Icons.pause_circle_outline,
+                size: 40,
+                color: Colors.green
+              ),
             ),
+          )
+        ],
+      ),
+    );
+  }
+  
+  Widget mainContent(TorrentInfo info) {
+    return Column(
+      children: [
+        first_row(info),
+        second_row(info),
+        third_row(info)
+      ],
+    );
+  }
+
+  Widget first_row(TorrentInfo info) {
+    return Flexible(
+      child: Padding(
+        padding: const EdgeInsets.all(4.0),
+        child: Text('${info.name}',
+          maxLines: 2,
+          style: TextStyle(
+              overflow: TextOverflow.ellipsis,
+              color: Colors.black
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget second_row(TorrentInfo info) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 4, 0, 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Text(
+            'Down : ${Conversions.formatBytes(info.downloaded)}',
+            style: TextStyle(
+                overflow: TextOverflow.ellipsis,
+                color: Colors.black
+            ),
+          ),
+          Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.download_rounded,
+                  size: 20,
+                  color: CustomColors.CustomGreen,
+                ),
+                Text(
+
+                  "${Conversions.intToSpeed(info.dlspeed)}",
+                  textAlign: TextAlign.end,
+                  style: TextStyle(
+                      overflow: TextOverflow.ellipsis,
+                      color: Colors.black
+                  ),
+                ),
+              ]
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget third_row(TorrentInfo info) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 2, 0, 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Text(
+            'Up : ${Conversions.formatBytes(info.uploaded)}',
+            style: TextStyle(
+                overflow: TextOverflow.ellipsis,
+                color: Colors.black
+            ),
+          ),
+          Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.upload_rounded,
+                  size: 20,
+                  color: Colors.orange,
+                ),
+                Text(
+                  "${Conversions.intToSpeed(info.upspeed)}",
+                  textAlign: TextAlign.end,
+                  style: TextStyle(
+                      overflow: TextOverflow.ellipsis,
+                      color: Colors.black
+                  ),
+                ),
+              ]
           )
         ],
       ),

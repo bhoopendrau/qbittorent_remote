@@ -4,12 +4,16 @@ import 'package:intl/intl.dart';
 class Conversions
 {
 
-  static String formatBytes(int? bytes, int decimals) {
+  static String formatBytes(int? bytes) {
     if (bytes != null) {
-      if (bytes <= 0) return "0 B";
+      if (bytes == -1) {
+        return "Not Found";
+      } else if (bytes <= 0) {
+        return "0 B";
+      }
       const suffixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
       var i = (log(bytes) / log(1024)).floor();
-      return ((bytes / pow(1024, i)).toStringAsFixed(decimals)) +
+      return ((bytes / pow(1024, i)).toStringAsFixed(2)) +
           ' ' +
           suffixes[i];
     } else {
@@ -19,7 +23,11 @@ class Conversions
 
   static String intToSpeed(int? bytes) {
     if (bytes != null) {
-      if (bytes <= 0) return "0 Bps";
+      if (bytes == -1) {
+        return "Not Found";
+      } else if (bytes <= 0) {
+        return "0 Bps";
+      }
       const suffixes = ["Bps", "KBps", "MBps", "GBps", "TBps", "PBps", "EBps", "ZBps", "YBps"];
       var i = (log(bytes) / log(1024)).floor();
       return ((bytes / pow(1024, i)).toStringAsFixed(0)) +
@@ -46,6 +54,28 @@ class Conversions
       return "100%";
     } else {
       return (progress*100).toStringAsFixed(1)+"%";
+    }
+  }
+
+  static String secondToTime(int? seconds){
+    if (seconds != null) {
+      int days = seconds~/(60*60*24);
+      seconds = seconds%(60*60*24);
+      int hours = seconds~/(60*60);
+      seconds = seconds%(60*60);
+      int minutes = seconds~/60;
+      String out = '';
+      if (days == 0 && hours == 0) {
+        out="$minutes minutes";
+      }
+      if (days == 0) {
+        out="$hours hours $minutes minutes";
+      } else {
+        out="$days days $hours hours $minutes minutes";
+      }
+      return out;
+    } else {
+      return "";
     }
   }
 
