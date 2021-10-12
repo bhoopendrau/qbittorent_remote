@@ -37,8 +37,8 @@ class _InfoState extends State<Info> {
 
   @override
   void dispose() {
-    _streamController.close();
     _timer.cancel();
+    _streamController.close();
     super.dispose();
   }
 
@@ -75,6 +75,7 @@ class _InfoState extends State<Info> {
   Widget infoListView(ExtraInfo? info) {
     if (info != null) {
       return ListView(
+        physics: BouncingScrollPhysics(),
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -128,7 +129,7 @@ class _InfoState extends State<Info> {
 
   Widget rowTemplate (String property, String value) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.fromLTRB(8, 4, 4, 8),
       child: Row(
         children: [
           Expanded(

@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:qbittorent_remote/Helpers/api_session.dart';
 import 'package:qbittorent_remote/Models/custom_colors.dart';
 import 'package:qbittorent_remote/Models/info_list.dart';
@@ -25,6 +28,7 @@ class _HomeState extends State<Home> {
 
   final StreamController<InfoList> _streamController = StreamController();
   late final Timer _timer;
+  ValueNotifier<bool> isDialOpen = ValueNotifier(false);
 
   @override
   void dispose() {
@@ -56,12 +60,42 @@ class _HomeState extends State<Home> {
       appBar: AppBar(
         title: Text('Home')
       ),
+      floatingActionButton: SpeedDial(
+        animatedIcon: AnimatedIcons.add_event,
+        backgroundColor: Colors.blueAccent,
+        overlayColor: Colors.grey,
+        openCloseDial: isDialOpen,
+        overlayOpacity: 0.5,
+        spacing: 15,
+        spaceBetweenChildren: 15,
+        children: [
+          SpeedDialChild(
+              child: Icon(Icons.insert_drive_file_outlined),
+              label: '.Torrent file',
+              backgroundColor: Colors.blue[200],
+              onTap: (){
+                print('Torrent Tapped');
+                isDialOpen = ValueNotifier(false);
+              }
+          ),
+          SpeedDialChild(
+              child: Icon(Icons.add_link),
+              label: 'Mail',
+              backgroundColor: Colors.blue[200],
+              onTap: (){
+                print('Link Tapped');
+                isDialOpen = ValueNotifier(false);
+              }
+          )
+        ],
+      ),
       body: Container(
         child: StreamBuilder<InfoList>(
           stream: _streamController.stream,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               return ListView.builder(
+                physics: BouncingScrollPhysics(),
                 itemCount: snapshot.data!.infos.length,
                   itemBuilder: (context, index) {
                   var torrentInfo = snapshot.data!.infos[index];
@@ -84,69 +118,75 @@ class _HomeState extends State<Home> {
       padding: EdgeInsets.all(5),
       child: Column(
         children: [
-          Card(
-              clipBehavior: Clip.antiAlias,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: ElevatedButton(
-                onPressed: (){
-                  Navigator.push(
-                      context, new MaterialPageRoute(
-                      builder: (__) => new Torrent_Details(info: info, api_session: widget.api_session,)));
-                },
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all(CustomColors.PrimaryAssentColor),
-                ),
-                child: Row(
-                  children: [
-                    _progressBar(info.progress),
-                    mainContent(info)
-                  ],
-                ),
-              ),
-         ),
-          // SizedBox(
-          //   height: 5,
-          // )
+
+          ElevatedButton(
+                 onPressed: (){
+                   Navigator.push(
+                       context, new MaterialPageRoute(
+                       builder: (__) => new Torrent_Details(info: info, api_session: widget.api_session,)));
+                 },
+            style: ButtonStyle(
+                   backgroundColor: MaterialStateProperty.all(CustomColors.PrimaryAssentColor),
+                 ),
+                 child: Column(
+                   mainAxisAlignment: MainAxisAlignment.center,
+                   crossAxisAlignment: CrossAxisAlignment.start,
+                   children: [
+                     first_row(info),
+                     Row(
+                       mainAxisAlignment: MainAxisAlignment.start,
+                       children: [
+                         _progressBar(info.progress),
+                         mainContent(info)
+                       ],
+                     ),
+                   ],
+                 ),
+          )
         ]
       )
     );
   }
 
   Widget _progressBar (double? progress) {
-    return SizedBox(
-      height: 70,
-      width: 70,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(0, 8, 8, 4),
-              child: SizedBox(
-                height: 60,
-                width: 60,
-                child: CircularProgressIndicator(
-                  value: progress,
-                  valueColor: AlwaysStoppedAnimation(Colors.green),
-                  backgroundColor: Colors.grey,
-                  strokeWidth: 6,
+    return Container(
+      margin: EdgeInsets.fromLTRB(0, 5, 5, 5),
+      child: SizedBox(
+        height: 70,
+        width: 70,
+        child: InkWell(
+          onTap: (){},
+          child: Stack(
+            fit: StackFit.passthrough,
+            children: [
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 8, 8, 4),
+                  child: SizedBox(
+                    height: 60,
+                    width: 60,
+                    child: CircularProgressIndicator(
+                      value: progress,
+                      valueColor: AlwaysStoppedAnimation(Colors.green),
+                      backgroundColor: Colors.grey,
+                      strokeWidth: 6,
+                    ),
+                  ),
                 ),
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 8, 8, 4),
+                child: Center(
+                  child: Icon(
+                    Icons.pause_circle_outline,
+                    size: 40,
+                    color: Colors.green
+                  ),
+                ),
+              )
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(0, 8, 8, 4),
-            child: Center(
-              child: Icon(
-                Icons.pause_circle_outline,
-                size: 40,
-                color: Colors.green
-              ),
-            ),
-          )
-        ],
+        ),
       ),
     );
   }
@@ -154,7 +194,6 @@ class _HomeState extends State<Home> {
   Widget mainContent(TorrentInfo info) {
     return Column(
       children: [
-        first_row(info),
         second_row(info),
         third_row(info)
       ],
@@ -162,15 +201,14 @@ class _HomeState extends State<Home> {
   }
 
   Widget first_row(TorrentInfo info) {
-    return Flexible(
-      child: Padding(
-        padding: const EdgeInsets.all(4.0),
-        child: Text('${info.name}',
-          maxLines: 2,
-          style: TextStyle(
-              overflow: TextOverflow.ellipsis,
-              color: Colors.black
-          ),
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: Text('${info.name}',
+        maxLines: 2,
+        textAlign: TextAlign.start,
+        style: TextStyle(
+            overflow: TextOverflow.ellipsis,
+            color: Colors.black
         ),
       ),
     );
