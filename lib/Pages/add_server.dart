@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:qbittorent_remote/Helpers/api_helper.dart';
 import 'package:qbittorent_remote/Helpers/api_session.dart';
 import 'package:qbittorent_remote/Helpers/shared_pref_helper.dart';
 import 'package:qbittorent_remote/Models/server.dart';
@@ -48,7 +47,7 @@ class _Add_ServerState extends State<Add_Server> {
           await api_session.login("bhuppi", "18120120229").then((value) async {
             if (value == true) {
               await pref.putString('serverList',Server.encode(servers));
-              Navigator.push(
+              Navigator.pushReplacement(
                   context, new MaterialPageRoute(
                       builder: (__) => new Home(api_session:api_session)));
             } else {

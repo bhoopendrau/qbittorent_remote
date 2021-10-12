@@ -1,7 +1,6 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:ui';
-
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -29,6 +28,7 @@ class _HomeState extends State<Home> {
   final StreamController<InfoList> _streamController = StreamController();
   late final Timer _timer;
   ValueNotifier<bool> isDialOpen = ValueNotifier(false);
+  Duration refresh = Duration(seconds: 5);
 
   @override
   void dispose() {
@@ -37,18 +37,10 @@ class _HomeState extends State<Home> {
     super.dispose();
   }
 
-  Future getInfoList() async {
-
-    var api = widget.api_session;
-    var url = Uri.parse(api.infoListUrl);
-    var response = await api.client.get(url, headers: api.headers);
-    _streamController.add(InfoList.fromJson(json.decode(response.body)));
-  }
-
   @override
   void initState() {
     _timer = Timer.periodic(Duration(seconds: 3), (timer) {
-      getInfoList();
+      //getInfoList();
     });
     super.initState();
 
@@ -73,8 +65,17 @@ class _HomeState extends State<Home> {
               child: Icon(Icons.insert_drive_file_outlined),
               label: '.Torrent file',
               backgroundColor: Colors.blue[200],
-              onTap: (){
+              onTap: () async {
                 print('Torrent Tapped');
+                FilePickerResult? result = await FilePicker.platform.pickFiles(
+                  type: FileType.custom,
+                  allowedExtensions: ['jpg'],
+                );
+                if (result != null) {
+                  widget.api_session.uploadFile(file: result.files.first);
+                } else {
+                  // User canceled the picker
+                }
                 isDialOpen = ValueNotifier(false);
               }
           ),
@@ -91,7 +92,7 @@ class _HomeState extends State<Home> {
       ),
       body: Container(
         child: StreamBuilder<InfoList>(
-          stream: _streamController.stream,
+          stream: widget.api_session.getTorrentList(refresh),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               return ListView.builder(

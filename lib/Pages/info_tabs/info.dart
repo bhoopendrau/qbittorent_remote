@@ -21,32 +21,14 @@ class Info extends StatefulWidget {
 
 class _InfoState extends State<Info> {
 
-  final StreamController<ExtraInfo> _streamController = StreamController();
-  late final Timer _timer;
-
-
-  Future getExtraInfo() async {
-    final request = {
-      "hash": widget.info.hash
-    };
-    var api = widget.api_session;
-    var url = Uri.parse(api.extrainfoUrl);
-    var response = await api.client.post(url, body:request, headers: api.headers);
-    _streamController.add( ExtraInfo.fromJson(json.decode(response.body)));
-  }
 
   @override
   void dispose() {
-    _timer.cancel();
-    _streamController.close();
     super.dispose();
   }
 
   @override
   void initState() {
-    _timer = Timer.periodic(Duration(seconds: 3), (timer) {
-      getExtraInfo();
-    });
     super.initState();
 
   }
@@ -56,7 +38,7 @@ class _InfoState extends State<Info> {
     return Scaffold(
       body: Container(
         child: StreamBuilder<ExtraInfo>(
-            stream: _streamController.stream,
+            stream: widget.api_session.getTorrentInfo(Duration(seconds: 5), widget.info.hash),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 return infoListView(snapshot.data);
@@ -66,7 +48,6 @@ class _InfoState extends State<Info> {
                 );
               }
             }
-
         ),
       ),
     );
