@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
@@ -69,10 +70,10 @@ class _HomeState extends State<Home> {
                 print('Torrent Tapped');
                 FilePickerResult? result = await FilePicker.platform.pickFiles(
                   type: FileType.custom,
-                  allowedExtensions: ['jpg'],
+                  allowedExtensions: ['torrent'],
                 );
                 if (result != null) {
-                  widget.api_session.uploadFile(file: result.files.first);
+                  widget.api_session.uploadFile(result.files.first);
                 } else {
                   // User canceled the picker
                 }

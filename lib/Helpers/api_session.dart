@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:qbittorent_remote/Models/extraInfo.dart';
@@ -114,12 +115,20 @@ class Session {
     }
   }
 
-  Future uploadFile({file:PlatformFile}) async {
+  Future uploadFile(PlatformFile? file) async {
   var url = Uri.parse(_baseurl+'/api/v2/torrents/add');
     var request = http.MultipartRequest('POST', url);
+    File fl = File(file!.path!);
     request.headers.addAll(headers);
-    request.files.add(new http.MultipartFile.fromBytes("torrent", file.bytes, filename: file.name));
+    print (file.bytes.toString());
+    //request.files.add(new http.MultipartFile.fromString("boundary", file.path!));
+    request.files.add(new http.MultipartFile.fromBytes("boundary", fl.readAsBytesSync()));
     var res = await request.send();
-    return res.reasonPhrase;
+    print("return status "+res.statusCode.toString());
+    print("return header "+res.reasonPhrase.toString());
+    print("return request "+res.request.toString());
+
+
+  return res.reasonPhrase;
   }
 }
